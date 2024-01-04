@@ -4,6 +4,7 @@ use (
 	"./front end"
 	./LoadBalancer
 	./LoadBalancer2
+	./LoadBalancer3
 	./backend
 	./backend2
 )

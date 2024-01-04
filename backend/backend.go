@@ -7,7 +7,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello from backend server!")
+		fmt.Fprintf(w, "Hello from backend server! 1")
 	})
 
 	fmt.Println("Backend server listening on :8001")
