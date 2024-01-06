@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -34,14 +35,26 @@ type Server struct{
 }
 
 func (dl *DistributedLock) Lock(ctx context.Context, ttl int64) error {
+
+
 	lease, err := dl.etcdClient.Grant(ctx, ttl)
+
 	if err != nil {
 		return err
 	}
 
-	_, err = dl.etcdClient.Put(ctx, dl.Key, dl.Value, clientv3.WithLease(lease.ID))
+	resp, err := dl.etcdClient.Txn(ctx).
+	If(clientv3.Compare(clientv3.Version(dl.Key), "=", 0)).
+		Then(clientv3.OpPut(dl.Key, dl.Value, clientv3.WithLease(lease.ID))).
+		Commit()
+
 	if err != nil {
+		fmt.Printf("Lock already taken")
 		return err
+	}
+
+	if !resp.Succeeded{
+		return errors.New("error acquring lock")
 	}
 
 	dl.LeaseID = lease.ID
@@ -127,19 +140,12 @@ func (lb *LoadBalancer) nextServer(requestLocation Location) *url.URL {
 
 	for _,val := range serverDistanceMap{
 		address := val.server.Address
-		healty,_ := lb.checkHealth(address.String())
-		if healty{
+		running,_ := lb.checkHealth(address.String())
+		if !running{
 			return address
 		}
 	}
 	// To be implemented Here if all severs fail
-	// Simple round-robin load balancing
-	// server := lb.servers[0]
-
-	// lb.servers = append(lb.servers[1:], server)
-	// lb.servers = append(lb.servers, server)
-
-	// return server.Address
 	return &url.URL{}
 }
 
@@ -151,8 +157,6 @@ func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
 		Longitude: long,
 	}
 	server := lb.nextServer(requestLocation)
-	fmt.Println("GetsHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHhhhhhhhhhh")
-	
 	// Reverse proxy to the selected backend server
 	proxy := httputil.NewSingleHostReverseProxy(server)
 	proxy.ServeHTTP(w, r)
@@ -161,50 +165,31 @@ func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
 func (lb *LoadBalancer) start(dl DistributedLock,ctx context.Context){
 
 	for {
-		fmt.Println("Start method called")
+		
 		// Acquire the lock
-		err := dl.Lock(ctx, 10) // Set TTL to 10 seconds
-		defer func() {
-			// Defer unlocking when finished
-			err := dl.Unlock(context.Background()) // Think about unlocking with ctx
-			if err != nil {
-				log.Fatal(err)
-			}
-		}()
+		err := dl.Lock(ctx, 20) // Set TTL to 10 seconds
 		if err != nil {
-			fmt.Println("Unable to acure lock")
-			log.Fatal(err)
+			fmt.Println("unable to acuire the lock because it is being used")
+			continue
+		}
 
-		}else{
+		activeServerLocation := dl.Value
+		isActive, _ := lb.checkHealth(activeServerLocation)
+		
+		if !isActive{
+			// If active server returns False, start listening at the active port
+			lb.startListening(activeServerLocation)
+			break
+		} 
 
-			// Access the shared storage
-			// For example, read or update the active server location
-			activeServerLocation := dl.Value
-			fmt.Printf("Active loaction Heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",activeServerLocation)
-			fmt.Printf("doneeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee")
-			// Call the active server
-			isActive, _ := lb.checkHealth(activeServerLocation)
-			fmt.Println(isActive,"boooooooooooooooooooooooooooooooooooool")
-			
-			if isActive == false {
-
-				fmt.Printf("This is the active server loaction",activeServerLocation)
-				// If active server returns False, start listening at the active port
-				fmt.Println(activeServerLocation)
-				lb.startListening(activeServerLocation)
-				break
-			} else {
-				// If True, continue waiting or perform other operations
-				log.Println("Waiting for the active server...")
-				// Unlock The etcd
-				// Additional logic as needed
-			}
-			time.Sleep(time.Second)
+		time.Sleep(time.Second * 10)
+		errs := dl.Unlock(ctx) 
+		if errs != nil {
+			fmt.Println("Failed to Unlock")
 		}
 	}
 }
 func (lb *LoadBalancer) checkHealth(address string)(bool,error){
-	 fmt.Printf("checking health hhhhhhhhhhhhhhhhhhhh")
 	conn, err := net.DialTimeout("tcp", address, 1*time.Second)
 	if err != nil {
 		return false,err
@@ -214,9 +199,7 @@ func (lb *LoadBalancer) checkHealth(address string)(bool,error){
 	return true,err
 }
 func (lb *LoadBalancer) startListening(address string){
-	fmt.Printf("about to start sever",address)
 	http.ListenAndServe(address, nil)
-	fmt.Printf("Started listening")
 }
 
 func main() {
