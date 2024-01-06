@@ -1,6 +1,7 @@
-go 1.21.3
+go 1.21.4
 
 use (
-	
-	./LoadBalancer	
+	./backend/server_1
+	./backend/server_2
+	./load_balancer
 )
