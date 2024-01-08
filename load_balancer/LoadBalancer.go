@@ -15,7 +15,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"go.etcd.io/etcd/client/v3"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 
@@ -205,12 +206,12 @@ func main() {
 	lb := &LoadBalancer{
 		servers: []Server{
 			Server{
-				Address:   parseURL("http://localhost:8001"),
+				Address:   parseURL("http://localhost:3030"),
 				Latitude:  10.5,
 				Longitude: 20.6,
 			},
 			Server{
-				Address:   parseURL("http://localhost:8002"),
+				Address:   parseURL("http://localhost:3031"),
 				Latitude:  70.5,
 				Longitude: 46.5,
 			},
