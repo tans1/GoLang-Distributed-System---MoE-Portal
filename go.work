@@ -4,4 +4,6 @@ use (
 	./backend/server_1
 	./backend/server_2
 	./load_balancer
+	./auth/server_1
+	./auth/server_2
 )
