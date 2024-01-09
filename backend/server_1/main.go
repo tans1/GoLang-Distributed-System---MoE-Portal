@@ -4,8 +4,6 @@ import (
 	database "backendServer1/config"
 	"backendServer1/controllers"
 	"backendServer1/models"
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,8 +18,7 @@ func GetResult(c *gin.Context){
 }
 func UploadResult(c *gin.Context){
 	token := c.Request.Header.Get("Authorization")
-	result, errr := controllers.ValidateToken( token)
-	fmt.Println(result,token)
+	result, errr := controllers.ValidateToken(token[14:])
 	if errr != nil {
 		c.JSON(400,controllers.Response{
 			Success: false,
@@ -117,6 +114,5 @@ func main(){
 	router.POST("/result",UploadResult)
 	router.POST("/register",RegisterUser)
 	router.POST("/login",AuthenticateUser)
-	// router.Any("/backend",UploadResult)
 	router.Run(":3030")
 }

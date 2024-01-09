@@ -21,7 +21,6 @@ func (c *AuthServer) RegisterUser(newUser *controller.NewUser, result *bool) err
 }
 func (c *AuthServer) ValidateToken(token *string, result *bool) error {
 	*result = controller.ValidateToken(*token)
-	fmt.Println(controller.ValidateToken(*token), *token)
 	return nil
 }
 func (c *AuthServer) AuthenticateUser(user *controller.User, result *controller.LoginResult) error {

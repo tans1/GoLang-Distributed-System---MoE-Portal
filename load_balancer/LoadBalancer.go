@@ -150,6 +150,7 @@ func (lb *LoadBalancer) nextServer(requestLocation Location) *url.URL {
 }
 
 func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("request is coming")
 	lat,_ := strconv.ParseFloat(r.Header.Get("Latitude"), 64)
 	long,_ := strconv.ParseFloat(r.Header.Get("Longitude"), 64)
 	requestLocation := Location {

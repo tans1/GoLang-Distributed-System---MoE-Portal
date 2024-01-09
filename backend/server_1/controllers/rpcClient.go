@@ -60,9 +60,7 @@ func AuthenticateUser( user User)(LoginResult, error){
 }
 func ValidateToken(token string) (bool, error){
 	address, er := GetClient();
-	// fmt.Print("The address is wrong")
 	if er != nil {
-		fmt.Print("The address is wrong")
 		return false,er
 	}
 	client, errr := rpc.Dial("tcp", address)
@@ -78,7 +76,6 @@ func ValidateToken(token string) (bool, error){
 		fmt.Print("Invalid token", result,err)
 		return result,err
 	}
-	fmt.Print("finaly", result,err, address)
 
 	return result,nil
 }

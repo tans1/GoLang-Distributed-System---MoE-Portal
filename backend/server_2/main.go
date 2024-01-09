@@ -20,7 +20,7 @@ func GetResult(c *gin.Context){
 }
 func UploadResult(c *gin.Context){
 	token := c.Request.Header.Get("Authorization")
-	result, errr := controllers.ValidateToken( token)
+	result, errr := controllers.ValidateToken(token[14:])
 	fmt.Println(result,token)
 	if errr != nil {
 		c.JSON(400,controllers.Response{
@@ -118,6 +118,5 @@ func main(){
 	router.POST("/result",UploadResult)
 	router.POST("/register",RegisterUser)
 	router.POST("/login",AuthenticateUser)
-	// router.Any("/backend",UploadResult)
 	router.Run(":3031")
 }

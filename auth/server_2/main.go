@@ -16,14 +16,11 @@ func init(){
 	database.ConnectDB()
 }
 func (c *AuthServer) RegisterUser(newUser *controller.NewUser, result *bool) error {
-	fmt.Println("Registration is called from the auth-server")
-
 	*result = controller.RegisterUser(*newUser)
 	return nil
 }
-func (c *AuthServer) ValidateToken(token *string, result *bool) error {
-	*result = controller.ValidateToken(*token)
-	fmt.Println(controller.ValidateToken(*token))
+func (c *AuthServer) ValidateToken(token string, result *bool) error {
+	*result = controller.ValidateToken(token)
 	return nil
 }
 func (c *AuthServer) AuthenticateUser(user *controller.User, result *controller.LoginResult) error {

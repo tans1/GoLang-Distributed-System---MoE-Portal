@@ -3,7 +3,6 @@ package controller
 import (
 	database "authServer1/config"
 	models "authServer1/model"
-	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -25,8 +24,6 @@ type Claims struct {
 }
 
 func RegisterUser(credentials NewUser) bool {
-	fmt.Println("Inside the register function ")
-
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(credentials.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return false
@@ -79,24 +76,20 @@ func Login(credentials User) (LoginResult, error) {
 }
 
 func ValidateToken(token string) bool {
-	claims := &Claims{}
+	claims := jwt.MapClaims{}
 	tkn, err := jwt.ParseWithClaims(token, claims,
 		func(t *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
 	
-		
 	if err != nil {
-		fmt.Println("invalid", err, tkn)
 		if err == jwt.ErrSignatureInvalid {
-			fmt.Println("Err Signature")
 			return false
 		}
 		return false
 	}
 
 	if !tkn.Valid {
-		fmt.Println("Invalid token")
 		return false
 	}
 
@@ -104,9 +97,7 @@ func ValidateToken(token string) bool {
 }
 
 func Refresh(tokenStr string)  (LoginResult, error) {
-	
 	claims := &Claims{}
-
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims,
 		func(t *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
@@ -126,7 +117,6 @@ func Refresh(tokenStr string)  (LoginResult, error) {
 	// 	w.WriteHeader(http.StatusBadRequest)
 	// 	return
 	// }
-
 	expirationTime := time.Now().Add(time.Minute * 5)
 
 	claims.ExpiresAt = expirationTime.Unix()
@@ -144,7 +134,6 @@ func Refresh(tokenStr string)  (LoginResult, error) {
 
 }
 func getUserPassword(username string) (string, error) {
-	// var password string
 	var user models.User
 	database.DB.Where("username = ?", username).First(&user)
 	if user.ID == 0 {

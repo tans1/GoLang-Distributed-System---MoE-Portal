@@ -3,7 +3,6 @@ package controller
 import (
 	database "authServer2/config"
 	models "authServer2/model"
-	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -25,8 +24,6 @@ type Claims struct {
 }
 
 func RegisterUser(credentials NewUser) bool {
-	fmt.Println("Inside the register function ")
-
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(credentials.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return false
@@ -79,7 +76,7 @@ func Login(credentials User) (LoginResult, error) {
 }
 
 func ValidateToken(token string) bool {
-	claims := &Claims{}
+	claims := jwt.MapClaims{}
 	tkn, err := jwt.ParseWithClaims(token, claims,
 		func(t *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
