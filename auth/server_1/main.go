@@ -14,12 +14,21 @@ type AuthServer int
 func init(){
 	database.ConnectDB()
 }
-func (c *AuthServer) RegisterUser(newUser *controller.NewUser, result *bool) error {
-	*result = controller.RegisterUser(*newUser)
+func (c *AuthServer) RefreshToken(token *string, result *controller.LoginResult) error {
+	loginResult, err := controller.Refresh(*token)
+	if err != nil {
+		return err
+	}
+
+	*result = loginResult
 	return nil
 }
 func (c *AuthServer) ValidateToken(token *string, result *bool) error {
 	*result = controller.ValidateToken(*token)
+	return nil
+}
+func (c *AuthServer) RegisterUser(newUser *controller.NewUser, result *bool) error {
+	*result = controller.RegisterUser(*newUser)
 	return nil
 }
 func (c *AuthServer) AuthenticateUser(user *controller.User, result *controller.LoginResult) error {
@@ -31,15 +40,7 @@ func (c *AuthServer) AuthenticateUser(user *controller.User, result *controller.
 	*result = loginResult
 	return nil
 }
-func (c *AuthServer) RefreshToken(token *string, result *controller.LoginResult) error {
-	loginResult, err := controller.Refresh(*token)
-	if err != nil {
-		return err
-	}
 
-	*result = loginResult
-	return nil
-}
 
 func main() {
 	database.DB.AutoMigrate(&models.User{})
