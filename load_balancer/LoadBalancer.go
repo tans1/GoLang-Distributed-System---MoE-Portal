@@ -15,7 +15,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"go.etcd.io/etcd/client/v3"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 
@@ -149,6 +150,7 @@ func (lb *LoadBalancer) nextServer(requestLocation Location) *url.URL {
 }
 
 func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("request is coming")
 	lat,_ := strconv.ParseFloat(r.Header.Get("Latitude"), 64)
 	long,_ := strconv.ParseFloat(r.Header.Get("Longitude"), 64)
 	requestLocation := Location {
@@ -205,12 +207,12 @@ func main() {
 	lb := &LoadBalancer{
 		servers: []Server{
 			Server{
-				Address:   parseURL("http://localhost:8001"),
+				Address:   parseURL("http://localhost:3030"),
 				Latitude:  10.5,
 				Longitude: 20.6,
 			},
 			Server{
-				Address:   parseURL("http://localhost:8002"),
+				Address:   parseURL("http://localhost:3031"),
 				Latitude:  70.5,
 				Longitude: 46.5,
 			},
