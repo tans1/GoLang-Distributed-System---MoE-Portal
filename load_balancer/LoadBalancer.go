@@ -17,7 +17,6 @@ import (
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"github.com/gorilla/websocket"
 )
 
 
@@ -39,8 +38,7 @@ type LoadBalancer struct {
 	servers []Server
 	petitionServers []Server
 	mutex   sync.Mutex
-	documentWebSockets map[string]*websocket.Conn
-	Connections map[*websocket.Conn]*url.URL
+	documentWebSockets map[string]*url.URL
 }
 
 func (dl *DistributedLock) Lock(ctx context.Context, ttl int64) error {
@@ -162,26 +160,21 @@ func (lb *LoadBalancer) reverseProxy(server *url.URL,w http.ResponseWriter,r *ht
 
 func (lb *LoadBalancer) handlePetitionRequest(documentName string,requestLocation Location,w http.ResponseWriter,r *http.Request) {
 
-	if conn, ok := lb.documentWebSockets[documentName]; ok {
-		if server, ok := lb.Connections[conn]; ok {
+	if server, ok := lb.documentWebSockets[documentName]; ok {
 			lb.reverseProxy(server,w,r)
 			return 
-		}
 	}
 	
 	server := lb.nextServer(requestLocation,lb.petitionServers)
-	lb.documentWebSockets[documentName] = &websocket.Conn{}
-	lb.Connections[lb.documentWebSockets[documentName]] = server
+	lb.documentWebSockets[documentName] = server
 	lb.reverseProxy(server,w,r)
 
 }
 
    
 func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("request is coming")
-	
-	lat,_ := strconv.ParseFloat(r.Header.Get("Latitude"), 64)
-	long,_ := strconv.ParseFloat(r.Header.Get("Longitude"), 64)
+	lat,_ := strconv.ParseFloat(r.URL.Query().Get("Latitude"), 64)
+	long,_ := strconv.ParseFloat(r.URL.Query().Get("Longitude"), 64)
 	requestLocation := Location {
 		Latitude : lat,
 		Longitude: long,
@@ -264,6 +257,7 @@ func main() {
 				Longitude: 46.5,
 			},
 		},
+		documentWebSockets: make(map[string]*url.URL),
 	
 	}
 

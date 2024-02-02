@@ -6,5 +6,6 @@ use (
 	./load_balancer
 	./auth/server_1
 	./auth/server_2
-	./backend/petition
+	./backend/petition1
+	./backend/petition2
 )

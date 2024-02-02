@@ -11,7 +11,7 @@
     </div>
 
     <script>
-        const socket = new WebSocket("ws://localhost:8085/ws?document=secondPetition");
+        const socket = new WebSocket("ws://localhost:8080/ws?document=secondPetition2&Latitude=50&Longitude=80");
         const textArea = document.getElementById("editor")
         socket.onmessage = function (event) {
             console.log(event.data,"on message body")
