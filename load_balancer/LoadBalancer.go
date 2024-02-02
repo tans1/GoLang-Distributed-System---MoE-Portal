@@ -17,6 +17,7 @@ import (
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"github.com/gorilla/websocket"
 )
 
 
@@ -32,6 +33,14 @@ type Server struct{
 	Latitude float64
 	Longitude float64
 	
+}
+
+type LoadBalancer struct {
+	servers []Server
+	petitionServers []Server
+	mutex   sync.Mutex
+	documentWebSockets map[string]*websocket.Conn
+	Connections map[*websocket.Conn]*url.URL
 }
 
 func (dl *DistributedLock) Lock(ctx context.Context, ttl int64) error {
@@ -62,6 +71,7 @@ func (dl *DistributedLock) Lock(ctx context.Context, ttl int64) error {
 	return nil
 }
 
+
 func (dl *DistributedLock) Unlock(ctx context.Context) error {
 	_, err := dl.etcdClient.Delete(ctx, dl.Key)
 	if err != nil {
@@ -78,10 +88,6 @@ func (dl *DistributedLock) Unlock(ctx context.Context) error {
 }
 
 
-type LoadBalancer struct {
-	servers []Server
-	mutex   sync.Mutex
-}
 
 type Location struct{
 	Latitude float64
@@ -116,11 +122,11 @@ func Harvsine(serverLocation Location,requestLocation Location)float64{
 
 }
 
-func (lb *LoadBalancer) DistanceCalculator(requestLocation Location)[]Tuple{
+func (lb *LoadBalancer) DistanceCalculator(requestLocation Location,serverList []Server)[]Tuple{
 	
 	distanceServerMap := []Tuple{}
 	
-	for _,server := range lb.servers{
+	for _,server := range serverList{
 		serverLocation := Location{server.Latitude,server.Longitude}
 		distance := Harvsine(serverLocation,requestLocation)
 		distanceServerMap = append(distanceServerMap, Tuple{server: server,distance: distance})
@@ -133,10 +139,10 @@ func (lb *LoadBalancer) DistanceCalculator(requestLocation Location)[]Tuple{
 	return distanceServerMap
 }
 
-func (lb *LoadBalancer) nextServer(requestLocation Location) *url.URL {
+func (lb *LoadBalancer) nextServer(requestLocation Location,serverList []Server) *url.URL {
 	lb.mutex.Lock()
 	defer lb.mutex.Unlock()
-	serverDistanceMap := lb.DistanceCalculator(requestLocation)
+	serverDistanceMap := lb.DistanceCalculator(requestLocation,serverList)
 
 	for _,val := range serverDistanceMap{
 		address := val.server.Address
@@ -149,18 +155,47 @@ func (lb *LoadBalancer) nextServer(requestLocation Location) *url.URL {
 	return &url.URL{}
 }
 
+func (lb *LoadBalancer) reverseProxy(server *url.URL,w http.ResponseWriter,r *http.Request){
+	proxy := httputil.NewSingleHostReverseProxy(server)
+	proxy.ServeHTTP(w, r)
+}
+
+func (lb *LoadBalancer) handlePetitionRequest(documentName string,requestLocation Location,w http.ResponseWriter,r *http.Request) {
+
+	if conn, ok := lb.documentWebSockets[documentName]; ok {
+		if server, ok := lb.Connections[conn]; ok {
+			lb.reverseProxy(server,w,r)
+			return 
+		}
+	}
+	
+	server := lb.nextServer(requestLocation,lb.petitionServers)
+	lb.documentWebSockets[documentName] = &websocket.Conn{}
+	lb.Connections[lb.documentWebSockets[documentName]] = server
+	lb.reverseProxy(server,w,r)
+
+}
+
+   
 func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("request is coming")
+	
 	lat,_ := strconv.ParseFloat(r.Header.Get("Latitude"), 64)
 	long,_ := strconv.ParseFloat(r.Header.Get("Longitude"), 64)
 	requestLocation := Location {
 		Latitude : lat,
 		Longitude: long,
 	}
-	server := lb.nextServer(requestLocation)
-	// Reverse proxy to the selected backend server
-	proxy := httputil.NewSingleHostReverseProxy(server)
-	proxy.ServeHTTP(w, r)
+
+
+	documentName := r.URL.Query().Get("document")
+	if (documentName != ""){
+		lb.handlePetitionRequest(documentName,requestLocation,w,r)
+		return
+	}
+
+	server := lb.nextServer(requestLocation,lb.servers)
+	lb.reverseProxy(server,w,r)
 }
 
 func (lb *LoadBalancer) start(dl DistributedLock,ctx context.Context){
@@ -217,8 +252,21 @@ func main() {
 				Longitude: 46.5,
 			},
 		},
+		petitionServers : []Server{
+			Server{
+				Address:   parseURL("http://localhost:3032"),
+				Latitude:  10.5,
+				Longitude: 20.6,
+			},
+			Server{
+				Address:   parseURL("http://localhost:3033"),
+				Latitude:  70.5,
+				Longitude: 46.5,
+			},
+		},
 	
 	}
+
 	http.HandleFunc("/", lb.handleRequest)
 
 	endpoints := []string{"localhost:2379"}
