@@ -148,8 +148,12 @@ func (lb *LoadBalancer) nextServer(requestLocation Location) *url.URL {
 	// To be implemented Here if all severs fail
 	return &url.URL{}
 }
-
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	}
+	
 func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
 	fmt.Println("request is coming")
 	lat,_ := strconv.ParseFloat(r.Header.Get("Latitude"), 64)
 	long,_ := strconv.ParseFloat(r.Header.Get("Longitude"), 64)
@@ -238,7 +242,7 @@ func main() {
 
 	ctx := context.Background()
 	lockKey := "active-sever-address"
-	lockValue := ":8080"
+	lockValue := ":8080" 
 
 	dl := DistributedLock{
 		Key:        lockKey,
