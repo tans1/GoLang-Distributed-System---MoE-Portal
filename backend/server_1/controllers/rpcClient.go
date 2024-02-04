@@ -14,6 +14,8 @@ type User struct {
 type NewUser struct {
 	User
 	Email string
+	FirstName string
+	LastName  string
 }
 type LoginResult struct {
 	Token string

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	config "petition2/config"
@@ -91,7 +92,7 @@ var upgrader = websocket.Upgrader{
 
 func saveDocument(document TextDocument) (TextDocument,error) {
 
-	if document.Title == "" || document.Text == "" {
+	if document.Title == "" {
 		return document,errors.New("title and text must not be empty")
 	}
 
@@ -112,7 +113,7 @@ func getDocument(documentName string) (TextDocument,error) {
 
 	err := config.Db.QueryRow(`SELECT Name,text,CreationDate,OwnerId 
 	FROM Petition where Name = ? ORDER BY PetitionId DESC LIMIT 1`, documentName).Scan(&Name, &text, &CreationDate, &OwnerId)
-	
+	fmt.Println(err)
 	layout := "2006-01-02"
 	modifiedDate, _ := time.Parse(layout, string(CreationDate))
 	docMutex.Lock()
@@ -230,11 +231,13 @@ func getAllPetitions(c *gin.Context) {
 }
 
 func createPetition(c *gin.Context) {
+	fmt.Println("the request is here.....................")
 	var document TextDocument
 	if err := c.BindJSON(&document); err != nil {
 		return
 	}
 	_,err := getDocument(document.Title)
+	fmt.Println(1111111111111111111, err)
 	if (err == nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
 		return
@@ -243,7 +246,11 @@ func createPetition(c *gin.Context) {
 	document.CreationDate = time.Now()
 
 	doc,err := saveDocument(document)
+	fmt.Println(222222222222222222, err)
+
 	if err != nil {
+		fmt.Println(333333333333333, err)
+
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
         return
     }
@@ -269,11 +276,11 @@ func signPetition(c *gin.Context) {
 }
 
 func getSignatories(c *gin.Context) {
+	fmt.Println("11111111111111111111111111")
 	petitionName := c.Query("PetitionName")
-	query := `SELECT FirstName, LastName, Email FROM Users JOIN SignPetition 
-	ON Users.UserId = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
+	query := `SELECT first_name, last_name, email FROM Users JOIN SignPetition ON Users.id = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
 	rows, err := config.Db.Query(query)
-
+	fmt.Println("22222222222222",err)
 	if (err != nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve signatories"})
 		return 

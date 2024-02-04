@@ -1,22 +1,23 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../components/navbar";
 import "quill/dist/quill.snow.css";
 import ReactQuill from "react-quill";
 import "../styles/petition.css";
+import {
+  useSignPetitionMutation,
+  useGetAllSignatoriesQuery
+} from "../redux rtk/apiSlice";
+
 export default function Petition() {
+  let title = localStorage.getItem("title");
+  const [addSignature, { error: addSignatureError }] =
+    useSignPetitionMutation();
+  const { data: signatories, error: signatoriesError } =
+    useGetAllSignatoriesQuery(title);
   var modules = {
     toolbar: [
       [{ size: ["small", false, "large", "huge"] }],
       ["bold", "italic", "underline", "strike", "blockquote"],
-      // [{ list: "ordered" }, { list: "bullet" }],
-      // ["link", "image"],
-      // [
-      //   { list: "ordered" },
-      //   { list: "bullet" },
-      //   { indent: "-1" },
-      //   { indent: "+1" },
-      //   { align: [] }
-      // ],
       [
         {
           color: [
@@ -61,12 +62,8 @@ export default function Petition() {
       ]
     ]
   };
-  var dummyData = [
-    { firstName: 'John', lastName: 'Doe', email: 'john.doe@example.com' },
-    { firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com' },
-    { firstName: 'Bob', lastName: 'Johnson', email: 'bob.johnson@example.com' },
-    { firstName: 'Alice', lastName: 'Williams', email: 'alice.williams@example.com' },
-];
+
+  console.log(signatories)
   var formats = [
     "header",
     "height",
@@ -75,51 +72,79 @@ export default function Petition() {
     "underline",
     "strike",
     "blockquote",
-    // "list",
     "color",
-    // "bullet",
-    // "indent",
-    // "link",
-    // "image",
-    // "align",
     "size"
   ];
 
+  const socket = new WebSocket(
+    `ws://10.5.227.67:8080/ws?document=${title}&Latitude=50&Longitude=80`
+  );
+
+  const textArea = document.getElementById("editor")
+  socket.onmessage = function (event) {
+    textArea.value = event.data;
+
+
+
+    // const textArea = document.querySelector(".ql-editor p");
+    // textArea.textContent = event.data;
+    // var div = document.createElement("div");
+    // div.innerHTML = event.data;
+    // var textPart = div.textContent || div.innerText;
+    // textArea.textContent = textPart.split('').reverse().join('');
+  };
+  textArea.addEventListener("input", function (event) {
+    const text = event.target.value;
+    const insertedText = textArea.value
+    console.log(insertedText,"About to send")
+    socket.send(insertedText);            
+});
   const handleProcedureContentChange = (content) => {
+    console.log(content);
     var div = document.createElement("div");
     div.innerHTML = content;
     var textPart = div.textContent || div.innerText;
-
-    console.log(textPart);
+    socket.send(textPart);
   };
-  
-  // const textArea = document.querySelector(".ql-editor p")
-  // textArea.textContent = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure consequuntur similique praesentium, eos necessitatibus excepturi omnis modi sed dolor ducimus!";
+
+  const handleSign = () => {
+    addSignature({ PetitionName: title, UserId: 1 })
+      .unwrap()
+      .then((res) => {
+        console.log("signed");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
   return (
     <div>
       <Navbar />
       <div className="petiton-container">
         <div className="petition-text-box">
-          <ReactQuill
+          {/* <ReactQuill
             theme="snow"
             modules={modules}
             formats={formats}
             placeholder="write your content ...."
             onChange={handleProcedureContentChange}
-            style={{ height: "100%" }}></ReactQuill>
+            style={{ height: "100%" }}></ReactQuill> */}
+            <textarea id="editor" cols="80" rows="20"></textarea>
         </div>
         <div className="sign-petion">
-          <span>Do you want to sign the petition ?</span> 
-          <button>Yes</button>
+          <span>Do you want to sign the petition ?</span>
+          <button onClick={handleSign}>Yes</button>
         </div>
         <div className="signed-petion-list">
           <p>The Following Students Have Signed :- </p>
           <ul>
-            {
-              dummyData.map((item, index) => {
-                return <li>{item.firstName} {item.lastName} , {item.email}</li>
-              })
-            }
+            {signatories?.map((item, index) => {
+              return (
+                <li>
+                  {item.FirstName} {item.LastName} , {item.Email}
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>

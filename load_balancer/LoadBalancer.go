@@ -17,6 +17,7 @@ import (
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"github.com/rs/cors"
 )
 
 
@@ -159,20 +160,23 @@ func (lb *LoadBalancer) reverseProxy(server *url.URL,w http.ResponseWriter,r *ht
 }
 
 func (lb *LoadBalancer) handlePetitionRequest(documentName string,requestLocation Location,w http.ResponseWriter,r *http.Request) {
-
+	fmt.Println("Request is being handled............................12342314")
 	if server, ok := lb.documentWebSockets[documentName]; ok {
 			lb.reverseProxy(server,w,r)
 			return 
 	}
-	
+	fmt.Println("00000000000000000000000000000000000000000000")
+
 	server := lb.nextServer(requestLocation,lb.petitionServers)
 	lb.documentWebSockets[documentName] = server
+	fmt.Println("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
 	lb.reverseProxy(server,w,r)
 
 }
 
    
 func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
+	
 	lat,_ := strconv.ParseFloat(r.URL.Query().Get("Latitude"), 64)
 	long,_ := strconv.ParseFloat(r.URL.Query().Get("Longitude"), 64)
 	requestLocation := Location {
@@ -182,7 +186,10 @@ func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
 
 
 	documentName := r.URL.Query().Get("document")
-	if (documentName != ""){
+	tag := r.URL.Query().Get("tag")
+
+	fmt.Println(tag)
+	if (documentName != "" || tag == "petition"){
 		lb.handlePetitionRequest(documentName,requestLocation,w,r)
 		return
 	}
@@ -232,6 +239,7 @@ func (lb *LoadBalancer) startListening(address string){
 }
 
 func main() {
+
 	lb := &LoadBalancer{
 		servers: []Server{
 			Server{
@@ -261,7 +269,13 @@ func main() {
 	
 	}
 
-	http.HandleFunc("/", lb.handleRequest)
+	corsMiddleware := cors.Default()
+	handler := corsMiddleware.Handler(http.HandlerFunc(lb.handleRequest))
+
+	
+
+	// http.HandleFunc("/", lb.handleRequest)
+	http.Handle("/", handler)
 
 	endpoints := []string{"localhost:2379"}
 

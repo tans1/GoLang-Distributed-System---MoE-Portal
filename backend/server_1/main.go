@@ -4,8 +4,10 @@ import (
 	database "backendServer1/config"
 	"backendServer1/controllers"
 	"backendServer1/models"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
+	cors "github.com/rs/cors/wrapper/gin"
 )
 
 type EmptyResponse struct {}
@@ -15,9 +17,11 @@ func init() {
 }
 
 func GetResult(c *gin.Context){
+	fmt.Println("the request has arrived______________")
 	controllers.GetResult(c)
 }
 func UploadResult(c *gin.Context){
+	fmt.Println("the request has arrived______________")
 	token := c.Request.Header.Get("Authorization")
 	result, errr := controllers.ValidateToken(token[14:])
 	if errr != nil {
@@ -127,6 +131,9 @@ func CORSMiddleware() gin.HandlerFunc {
 func main(){
 	database.DB.AutoMigrate(&models.Result{})
 	router := gin.Default()
+	router.Use(cors.Default())
+
+	
 	router.GET("/result",GetResult)
 	router.POST("/upload",UploadResult)
 	router.POST("/register",RegisterUser)

@@ -20,7 +20,7 @@ export default function Navbar() {
             <Link to="/upload" className="link">  upload result</Link>
         </div>
         <div className='nav-item'>
-            <Link to="/petition" className="link">  petition</Link>
+            <Link to="/petitions" className="link">  petitions</Link>
         </div>
         <div className='nav-item'>
             <Link to="/login" className="link"> login </Link>

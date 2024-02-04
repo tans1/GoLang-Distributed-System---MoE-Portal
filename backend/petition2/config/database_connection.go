@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	mysqlDSN = "root:root@tcp(127.0.0.1:3306)/collaborative_editor"
+	mysqlDSN = "root:12345678@tcp(127.0.0.1:3306)/results?charset=utf8mb4&parseTime=True&loc=Local"
 	serverAddress = "localhost:8080"
 )
 
@@ -55,10 +55,10 @@ if err != nil {
 	_, err = Db.Exec(`
 	CREATE TABLE IF NOT EXISTS SignPetition (
 		PetitionName varchar(256),
-		UserId INT,
+		UserId  BIGINT UNSIGNED,
 		PRIMARY KEY (PetitionName, UserId),
 		FOREIGN KEY (PetitionName) REFERENCES Petition(Name),
-		FOREIGN KEY (userId) REFERENCES Users(userId)
+		FOREIGN KEY (userId) REFERENCES Users(id)
 	);
 	
 	`)

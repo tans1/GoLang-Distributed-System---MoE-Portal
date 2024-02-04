@@ -2,32 +2,42 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router";
 import "../styles/signup.css";
-
+import { useRegisterUserMutation } from "../redux rtk/apiSlice";
 function SignUp() {
   // const navigate = useNavigate();
+  const [registerUser, { error: registerUserError }] =
+    useRegisterUserMutation();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [password, setpassword] = useState("");
   const [password2, setpassword2] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== password2) {
       alert("passwords do not match");
       return;
     }
-    const data = {
-      username: username,
-      email: email,
-      fullName: fullName,
-      password: password
+    const payload = {
+      Username: username,
+      Email: email,
+      FirstName: firstName,
+      LastName : lastName,
+      Password: password
     };
+    await registerUser(payload)
+    .unwrap()
+    .then((data) => window.location.href = "/login")
+    .catch((error) => {
+      console.log(error);
+    });
   };
   return (
     <div className="body-container">
       <div className="signup-container">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} method="post">
           <label className="form-label" htmlFor="username">
             Username
           </label>
@@ -52,16 +62,27 @@ function SignUp() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <label className="form-label" htmlFor="name">
-            Full Name
+          <label className="form-label" htmlFor="first-name">
+            First Name
           </label>
           <input
             className="form-input"
             type="text"
-            placeholder="Full Name"
-            name="name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
+            placeholder="First Name"
+            name="first-name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+          <label className="form-label" htmlFor="last-name">
+            Last Name
+          </label>
+          <input
+            className="form-input"
+            type="text"
+            placeholder="Last Name"
+            name="last-name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
           />
 
           <label className="form-label" htmlFor="password">

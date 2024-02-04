@@ -1,8 +1,10 @@
 package controllers
 
 import (
-	database "backendServer2/config"
-	"backendServer2/models"
+	database "backendServer1/config"
+	"backendServer1/models"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,6 +29,22 @@ type Response struct {
 	Data interface{}
 }
 
+type ResponseData struct {
+	Name string
+	Sex string
+	Age int64
+	Stream string 
+	Maths int64 
+	English int64 
+	Aptitude int64 
+	Physics int64 
+	Chemistry int64 
+	Biology int64 
+	// Civic int64 
+	// Economics int64 
+	// History int64 
+	// Geography int64 
+}
 func UploadResult(c *gin.Context){
 	var body Body
 	if c.BindJSON(&body) != nil {
@@ -55,17 +73,10 @@ func UploadResult(c *gin.Context){
 }
 
 func GetResult(c *gin.Context){
-	var body Body2
+	paramName := c.Query("admissionNumber");
+	fmt.Println(paramName)
 	var result models.Result
-	if c.BindJSON(&body) != nil {
-		c.JSON(400, Response{
-			Success: false,
-			Message: "Invalid request body",
-			Data: models.Result{},
-		})
-		return
-	}
-	database.DB.Where("admission_number = ?", body.AdmissionNumber).First(&result)
+	database.DB.Where("admission_number = ?", paramName).First(&result)
 	if result.ID == 0 {
 		c.JSON(404, Response{
 			Success: false,
@@ -74,9 +85,26 @@ func GetResult(c *gin.Context){
 		})
 		return
 	}
+	
+	responseData := ResponseData{
+		Name:      result.Name,
+		Sex:       result.Sex,
+		Age:       result.Age,
+		Stream:    result.Stream,
+		Maths:     result.Maths,
+		English:   result.English,
+		Aptitude:  result.Aptitude,
+		Physics:   result.Physics,
+		Chemistry: result.Chemistry,
+		Biology:   result.Biology,
+		// Civic:     result.Civic,
+		// Economics: result.Economics,
+		// History:   result.History,
+		// Geography: result.Geography,
+	}
 	c.JSON(200, Response{
 		Success: true,
 		Message: "Result found",
-		Data: result,
+		Data: responseData,
 	})
 }

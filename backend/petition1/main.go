@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	config "petition1/config"
@@ -230,6 +231,7 @@ func getAllPetitions(c *gin.Context) {
 }
 
 func createPetition(c *gin.Context) {
+	fmt.Println("the request is here.....................")
 	var document TextDocument
 	if err := c.BindJSON(&document); err != nil {
 		return
@@ -269,11 +271,12 @@ func signPetition(c *gin.Context) {
 }
 
 func getSignatories(c *gin.Context) {
+	fmt.Println("11111111111111111111111111")
 	petitionName := c.Query("PetitionName")
 	query := `SELECT FirstName, LastName, Email FROM Users JOIN SignPetition 
 	ON Users.UserId = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
 	rows, err := config.Db.Query(query)
-
+	fmt.Println("22222222",err)
 	if (err != nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve signatories"})
 		return 

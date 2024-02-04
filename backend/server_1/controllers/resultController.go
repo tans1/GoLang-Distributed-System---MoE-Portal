@@ -40,10 +40,10 @@ type ResponseData struct {
 	Physics int64 
 	Chemistry int64 
 	Biology int64 
-	Civic int64 
-	Economics int64 
-	History int64 
-	Geography int64 
+	// Civic int64 
+	// Economics int64 
+	// History int64 
+	// Geography int64 
 }
 func UploadResult(c *gin.Context){
 	var body Body
@@ -97,10 +97,10 @@ func GetResult(c *gin.Context){
 		Physics:   result.Physics,
 		Chemistry: result.Chemistry,
 		Biology:   result.Biology,
-		Civic:     result.Civic,
-		Economics: result.Economics,
-		History:   result.History,
-		Geography: result.Geography,
+		// Civic:     result.Civic,
+		// Economics: result.Economics,
+		// History:   result.History,
+		// Geography: result.Geography,
 	}
 	c.JSON(200, Response{
 		Success: true,
