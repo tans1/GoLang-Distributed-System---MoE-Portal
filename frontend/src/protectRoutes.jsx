@@ -1,12 +1,25 @@
-import React from 'react'
+import React from "react";
 import { useLocation } from "react-router";
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export default function ProtectRoutes() {
-    const auth = false;
+  let auth = false;
 
-    // const location = useLocation();
-    return(
-        auth ? <Outlet/> : <Navigate to="/login" replace  />
-    )
+  let token = localStorage.getItem("token");
+  let decodedToken = jwtDecode(token);
+  let currentDate = new Date();
+
+  console.log(currentDate.getTime(), decodedToken.exp);
+  // JWT exp is in seconds
+  if (decodedToken.exp * 1000 < currentDate.getTime()) {
+    console.log("Token expired.");
+    auth = false;
+  } else {
+    console.log("Valid token");
+    auth = true;
+  }
+
+  // const location = useLocation();
+  return auth ? <Outlet /> : <Navigate to="/login" replace />;
 }

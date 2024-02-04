@@ -42,3 +42,17 @@ li:hover {
   background-color: #e0e0e0;
   transition: background-color 0.3s ease;
 }
+
+#editor {
+  height: 300px;
+  width: 100%;
+  margin-top: 30px;
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 16px;
+  font-family: Arial, sans-serif;
+  outline: none;
+  box-shadow: 0 0 5px #ddd;
+}

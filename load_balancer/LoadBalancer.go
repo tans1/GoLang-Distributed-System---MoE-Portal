@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"math"
 	"net"
@@ -16,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
 	"github.com/rs/cors"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 
@@ -57,7 +56,6 @@ func (dl *DistributedLock) Lock(ctx context.Context, ttl int64) error {
 		Commit()
 
 	if err != nil {
-		fmt.Printf("Lock already taken")
 		return err
 	}
 
@@ -160,16 +158,13 @@ func (lb *LoadBalancer) reverseProxy(server *url.URL,w http.ResponseWriter,r *ht
 }
 
 func (lb *LoadBalancer) handlePetitionRequest(documentName string,requestLocation Location,w http.ResponseWriter,r *http.Request) {
-	fmt.Println("Request is being handled............................12342314")
 	if server, ok := lb.documentWebSockets[documentName]; ok {
 			lb.reverseProxy(server,w,r)
 			return 
 	}
-	fmt.Println("00000000000000000000000000000000000000000000")
 
 	server := lb.nextServer(requestLocation,lb.petitionServers)
 	lb.documentWebSockets[documentName] = server
-	fmt.Println("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
 	lb.reverseProxy(server,w,r)
 
 }
@@ -188,7 +183,6 @@ func (lb *LoadBalancer) handleRequest(w http.ResponseWriter, r *http.Request) {
 	documentName := r.URL.Query().Get("document")
 	tag := r.URL.Query().Get("tag")
 
-	fmt.Println(tag)
 	if (documentName != "" || tag == "petition"){
 		lb.handlePetitionRequest(documentName,requestLocation,w,r)
 		return
@@ -205,7 +199,6 @@ func (lb *LoadBalancer) start(dl DistributedLock,ctx context.Context){
 		// Acquire the lock
 		err := dl.Lock(ctx, 20) // Set TTL to 10 seconds
 		if err != nil {
-			fmt.Println("unable to acuire the lock because it is being used")
 			continue
 		}
 
@@ -221,7 +214,6 @@ func (lb *LoadBalancer) start(dl DistributedLock,ctx context.Context){
 		time.Sleep(time.Second * 10)
 		errs := dl.Unlock(ctx) 
 		if errs != nil {
-			fmt.Println("Failed to Unlock")
 		}
 	}
 }
@@ -286,7 +278,6 @@ func main() {
 
 	client, err := clientv3.New(cfg)
 	if err != nil {
-		fmt.Printf("Error connecting to etcd: %v", err)
 		os.Exit(1)
 	}
 

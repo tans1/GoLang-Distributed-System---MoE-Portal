@@ -15,8 +15,4 @@ type Result struct {
 	Physics int64 `gorm:"default:0" `
 	Chemistry int64 `gorm:"default:0" `
 	Biology int64 `gorm:"default:0" `
-	// Civic int64 `gorm:"default:0" `
-	// Economics int64 `gorm:"default:0" `
-	// History int64 `gorm:"default:0" `
-	// Geography int64 `gorm:"default:0" `
 }

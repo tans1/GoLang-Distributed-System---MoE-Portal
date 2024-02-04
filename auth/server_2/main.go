@@ -4,11 +4,9 @@ import (
 	database "authServer2/config"
 	"authServer2/controller"
 	models "authServer2/model"
-	"fmt"
 	"net"
 	"net/rpc"
 )
-
 type AuthServer int
 
 
@@ -19,8 +17,8 @@ func (c *AuthServer) RegisterUser(newUser *controller.NewUser, result *bool) err
 	*result = controller.RegisterUser(*newUser)
 	return nil
 }
-func (c *AuthServer) ValidateToken(token string, result *bool) error {
-	*result = controller.ValidateToken(token)
+func (c *AuthServer) ValidateToken(token *string, result *bool) error {
+	*result = controller.ValidateToken(*token)
 	return nil
 }
 func (c *AuthServer) AuthenticateUser(user *controller.User, result *controller.LoginResult) error {
@@ -49,15 +47,12 @@ func main() {
 
 	listener, err := net.Listen("tcp", ":8002")
 	if err != nil {
-		fmt.Println("Error starting server:", err)
 		return
 	}
 
-	fmt.Println("Server is listening on port 8002...")
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("Error accepting connection:", err)
 			continue
 		}
 		go rpc.ServeConn(conn)

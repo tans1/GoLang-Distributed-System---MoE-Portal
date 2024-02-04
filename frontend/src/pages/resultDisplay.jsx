@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
 import "../styles/resultDisplay.css";
 import Lottie from "lottie-react";
@@ -7,19 +7,35 @@ import celebration1 from "../celebration1.json";
 import celebration3 from "../celebration3.json";
 import wine from "../wine.json";
 import { useLazyGetResultQuery } from "../redux rtk/apiSlice";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function ResultDisplay() {
   const [registrationNumber, setRegistrationNumber] = useState("");
-  const [getResult, { data, isLoading, error, isSuccess }] =
+  const [getResult, { data, error, isSuccess }] =
     useLazyGetResultQuery();
     
   const handleSubmit = () => {
     getResult(registrationNumber);
   };
-  console.log("the data is ", data, isLoading, error)
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to get result ', {
+        position: "top-center",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    }
+  }, [error]);
   return (
     <div>
       <Navbar />
+      <ToastContainer />
       {isSuccess ? (
         <div className="display-container">
           <div className="celebration-one">

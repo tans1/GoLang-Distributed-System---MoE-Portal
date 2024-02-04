@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "../styles/petitionCreation.css";
 import { useCreatePetitionMutation } from "../redux rtk/apiSlice";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 export default function PetitionCreation() {
@@ -21,11 +23,23 @@ export default function PetitionCreation() {
       })
       .catch((error) => {
         console.log(error);
+        toast.error('Failed to create', {
+          position: "top-center",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          
+        });
       });
 
   };
   return (
     <>
+    <ToastContainer />
       <div className="body-container">
         <div className="petioncreation-container">
           <label className="form-label" htmlFor="title">

@@ -3,20 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const distributedSystemApi = createApi({
   reducerPath: "distributedSystemApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:8080",
-    credentials: "same-origin",
-    prepareHeaders: (headers, { getState }) => {
-      console.log("headers __", headers);
-      const authToken = localStorage.getItem("token");
-      if (authToken) {
-        headers.set("Authorization", `${authToken}`);
-        // headers.set("Content-Type", "application/json");
-        // headers.set("Access-Control-Allow-Origin", "*");
-        // headers.set("Access-Control-Allow-Credentials", "true");
-      }
-
-      return headers;
-    }
+    baseUrl: "http://localhost:8080"
   }),
   endpoints: (builder) => ({
     getResult: builder.query({
@@ -65,10 +52,11 @@ export const distributedSystemApi = createApi({
     }),
     uploadResult: builder.mutation({
       query(body) {
+        const token = localStorage.getItem("token");
         return {
           url: `/upload`,
           method: "POST",
-          body: body
+          body: { ...body, token: token }
         };
       }
     }),

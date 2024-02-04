@@ -5,7 +5,7 @@ import { useGetAllPetitionsQuery } from "../redux rtk/apiSlice";
 
 export default function PetitionsList() {
   const { data: petitions, error: petitionsError } = useGetAllPetitionsQuery();
-  
+
   const handleCardClick = (title) => {
     localStorage.setItem("title", title);
     window.location.href = "/petition";
@@ -31,7 +31,12 @@ export default function PetitionsList() {
           })}
         </div>
         <div className="button-container">
-          <button>Create</button>
+          <button
+            onClick={() => {
+              window.location.href = "/create-petition";
+            }}>
+            Create
+          </button>
         </div>
       </div>
     </>

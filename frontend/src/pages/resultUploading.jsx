@@ -3,6 +3,8 @@ import Navbar from "../components/navbar";
 import { useForm, useFieldArray } from "react-hook-form";
 import "../styles/resultUpload.css";
 import { useUploadResultMutation } from "../redux rtk/apiSlice";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function ResultUploading() {
   const [uploadResult, { error: uploadResultError }] =
@@ -13,28 +15,62 @@ export default function ResultUploading() {
     name: "uploadedResult"
   });
   const onSubmit = async (data) => {
-    // console.log(data)
     const payload = {
       Latitude: 12.5,
       Longitude: 10.4,
-      Data: data.uploadedResult
+      Data: data.uploadedResult.map((result) => {
+        return {
+          ...result,
+          Maths: parseFloat(result.Maths),
+          English: parseFloat(result.English),
+          Physics: parseFloat(result.Physics),
+          Chemistry: parseFloat(result.Chemistry),
+          Biology: parseFloat(result.Biology),
+          Aptitude: parseFloat(result.Aptitude),
+          Age: parseFloat(result.Age)
+
+        }
+      })
     };
-    console.log(payload);
     await uploadResult(payload)
       .unwrap()
       .then((res) => {
-        console.log("Successfully uploaded");
-        console.log(res)
+        toast.success('Successfully uploaded!!!', {
+          position: "top-center",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+        // make the navigation after 2 seconds
+        setTimeout(() => {
+          window.location.href = '/result';
+        }, 2000);
+        // window.location('/result');
+
       })
       .catch((err) => {
-        console.log(`Failed to upload `)
-        console.log(err)
+        toast.error('Failed to upload', {
+          position: "top-center",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
       });
-      console.log(uploadResultError)
   };
+
   return (
     <div>
       <Navbar />
+      <ToastContainer />
+
       <div className="natural-form-container">
         <form onSubmit={handleSubmit(onSubmit)}>
           <table border="1">

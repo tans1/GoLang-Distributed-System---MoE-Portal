@@ -3,6 +3,7 @@ package controller
 import (
 	database "authServer2/config"
 	models "authServer2/model"
+	"errors"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -20,6 +21,7 @@ type NewUser struct {
 }
 type Claims struct {
 	Username string `json:"username"`
+	UserID   uint   `json:"user_id"`
 	jwt.StandardClaims
 }
 
@@ -54,9 +56,15 @@ func Login(credentials User) (LoginResult, error) {
 		return LoginResult{}, err
 	}
 
-	expirationTime := time.Now().Add(time.Minute * 5)
+	expirationTime := time.Now().Add(time.Hour * 500)
+	userID, err := getUserID(credentials.Username)
+    if err != nil {
+        return LoginResult{}, err
+    }
+
 	claims := &Claims{
 		Username: credentials.Username,
+		UserID:   userID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -81,7 +89,7 @@ func ValidateToken(token string) bool {
 		func(t *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
-
+	
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			return false
@@ -97,9 +105,7 @@ func ValidateToken(token string) bool {
 }
 
 func Refresh(tokenStr string)  (LoginResult, error) {
-	
 	claims := &Claims{}
-
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims,
 		func(t *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
@@ -119,8 +125,7 @@ func Refresh(tokenStr string)  (LoginResult, error) {
 	// 	w.WriteHeader(http.StatusBadRequest)
 	// 	return
 	// }
-
-	expirationTime := time.Now().Add(time.Minute * 5)
+	expirationTime := time.Now().Add(time.Hour * 500)
 
 	claims.ExpiresAt = expirationTime.Unix()
 
@@ -143,4 +148,13 @@ func getUserPassword(username string) (string, error) {
 		return "", nil
 	}
 	return user.Password, nil
+}
+
+func getUserID(username string) (uint, error) {
+    var user models.User
+    database.DB.Where("username = ?", username).First(&user)
+    if user.ID == 0 {
+        return 0, errors.New("User not found")
+    }
+    return user.ID, nil
 }

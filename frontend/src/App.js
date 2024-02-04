@@ -19,13 +19,13 @@ function App() {
         <Route path="/result" element={<ResultDisplay />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/petitions" element={<PetitionsList />} />
-        <Route path="/create-petition" element={<PetitionCreation />} />
-        <Route path="/petition" element={<Petition />} />
 
-        <Route path="/upload" element={<ResultUploading />} />
-        {/* <Route element={<ProtectRoutes />}>
-        </Route> */}
+        <Route element={<ProtectRoutes />}>
+          <Route path="/upload" element={<ResultUploading />} />
+          <Route path="/petitions" element={<PetitionsList />} />
+          <Route path="/create-petition" element={<PetitionCreation />} />
+          <Route path="/petition" element={<Petition />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

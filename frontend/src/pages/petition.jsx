@@ -7,6 +7,9 @@ import {
   useSignPetitionMutation,
   useGetAllSignatoriesQuery
 } from "../redux rtk/apiSlice";
+import { jwtDecode } from "jwt-decode";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Petition() {
   let title = localStorage.getItem("title");
@@ -14,122 +17,98 @@ export default function Petition() {
     useSignPetitionMutation();
   const { data: signatories, error: signatoriesError } =
     useGetAllSignatoriesQuery(title);
-  var modules = {
-    toolbar: [
-      [{ size: ["small", false, "large", "huge"] }],
-      ["bold", "italic", "underline", "strike", "blockquote"],
-      [
-        {
-          color: [
-            "#000000",
-            "#e60000",
-            "#ff9900",
-            "#ffff00",
-            "#008a00",
-            "#0066cc",
-            "#9933ff",
-            "#ffffff",
-            "#facccc",
-            "#ffebcc",
-            "#ffffcc",
-            "#cce8cc",
-            "#cce0f5",
-            "#ebd6ff",
-            "#bbbbbb",
-            "#f06666",
-            "#ffc266",
-            "#ffff66",
-            "#66b966",
-            "#66a3e0",
-            "#c285ff",
-            "#888888",
-            "#a10000",
-            "#b26b00",
-            "#b2b200",
-            "#006100",
-            "#0047b2",
-            "#6b24b2",
-            "#444444",
-            "#5c0000",
-            "#663d00",
-            "#666600",
-            "#003700",
-            "#002966",
-            "#3d1466",
-            "custom-color"
-          ]
-        }
-      ]
-    ]
-  };
+  const [textArea, setTextArea] = useState(null);
 
-  console.log(signatories)
-  var formats = [
-    "header",
-    "height",
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "color",
-    "size"
-  ];
-
-  const socket = new WebSocket(
-    `ws://10.5.227.67:8080/ws?document=${title}&Latitude=50&Longitude=80`
-  );
-
-  const textArea = document.getElementById("editor")
-  socket.onmessage = function (event) {
-    textArea.value = event.data;
-
-
-
-    // const textArea = document.querySelector(".ql-editor p");
-    // textArea.textContent = event.data;
-    // var div = document.createElement("div");
-    // div.innerHTML = event.data;
-    // var textPart = div.textContent || div.innerText;
-    // textArea.textContent = textPart.split('').reverse().join('');
-  };
-  textArea.addEventListener("input", function (event) {
-    const text = event.target.value;
-    const insertedText = textArea.value
-    console.log(insertedText,"About to send")
-    socket.send(insertedText);            
-});
-  const handleProcedureContentChange = (content) => {
-    console.log(content);
-    var div = document.createElement("div");
-    div.innerHTML = content;
-    var textPart = div.textContent || div.innerText;
-    socket.send(textPart);
-  };
+  useEffect(() => {
+    const element = document.getElementById("editor");
+    setTextArea(element);
+  }, []);
 
   const handleSign = () => {
-    addSignature({ PetitionName: title, UserId: 1 })
+    let token = localStorage.getItem("token");
+    let decodedToken = jwtDecode(token);
+    addSignature({ PetitionName: title, UserId: decodedToken.user_id })
       .unwrap()
       .then((res) => {
-        console.log("signed");
+        toast.success("Signed successfully", {
+          position: "top-center",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light"
+        });
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
       })
       .catch((error) => {
         console.log(error);
+        toast.error("Unable to sign", {
+          position: "top-center",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light"
+        });
       });
   };
+
+  let socket;
+  // const textArea = document.getElementById("editor");
+  function connectWebSocket() {
+    socket = new WebSocket(
+      `ws://localhost:3033/ws?document=${title}&Latitude=50&Longitude=80`
+    );
+
+    socket.onopen = function () {
+      console.log("WebSocket connection established.");
+    };
+
+    socket.onmessage = function (event) {
+      console.log("Received message:", event.data);
+      if (textArea) {
+        textArea.value = event.data;
+      }
+    };
+
+    socket.onerror = function (error) {
+      console.error("WebSocket error:", error);
+    };
+    socket.onclose = function () {
+      console.log("WebSocket connection closed. Reconnecting...");
+      setTimeout(connectWebSocket, 200); // Attempt to reconnect after 2 seconds
+    };
+  }
+
+  connectWebSocket();
+
+  textArea?.addEventListener("input", function (event) {
+    const text = event.target.value;
+    console.log("About to send:", text);
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(text);
+    } else {
+      console.warn("WebSocket not in OPEN state. Unable to send data.");
+      connectWebSocket();
+    }
+    // socket.send(text);
+  });
+
   return (
     <div>
+      <ToastContainer />
+
       <Navbar />
       <div className="petiton-container">
         <div className="petition-text-box">
-          {/* <ReactQuill
-            theme="snow"
-            modules={modules}
-            formats={formats}
-            placeholder="write your content ...."
-            onChange={handleProcedureContentChange}
-            style={{ height: "100%" }}></ReactQuill> */}
-            <textarea id="editor" cols="80" rows="20"></textarea>
+          <textarea id="editor" cols="80" rows="20"></textarea>
         </div>
         <div className="sign-petion">
           <span>Do you want to sign the petition ?</span>

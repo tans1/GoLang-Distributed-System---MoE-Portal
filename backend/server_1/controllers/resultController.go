@@ -3,7 +3,6 @@ package controllers
 import (
 	database "backendServer1/config"
 	"backendServer1/models"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +10,7 @@ import (
 type Base struct {
 	Latitude  float64         `json:"latitude"`
     Longitude float64         `json:"longitude"`
+	Token string  `json:"token"`
 }
 
 type Body struct {
@@ -40,10 +40,6 @@ type ResponseData struct {
 	Physics int64 
 	Chemistry int64 
 	Biology int64 
-	// Civic int64 
-	// Economics int64 
-	// History int64 
-	// Geography int64 
 }
 func UploadResult(c *gin.Context){
 	var body Body
@@ -55,6 +51,17 @@ func UploadResult(c *gin.Context){
 		})
         return
     }
+	token := body.Token
+	rst , _ := ValidateToken(token)
+	if !rst {
+
+		c.JSON(400,Response{
+			Success: false,
+			Message: "Invalid token",
+			Data: models.Result{},
+		})
+		return
+	}
 	result := database.DB.Create(&body.Data)
 	if result.Error != nil {
 		c.JSON(500, Response{
@@ -74,7 +81,6 @@ func UploadResult(c *gin.Context){
 
 func GetResult(c *gin.Context){
 	paramName := c.Query("admissionNumber");
-	fmt.Println(paramName)
 	var result models.Result
 	database.DB.Where("admission_number = ?", paramName).First(&result)
 	if result.ID == 0 {
@@ -97,10 +103,6 @@ func GetResult(c *gin.Context){
 		Physics:   result.Physics,
 		Chemistry: result.Chemistry,
 		Biology:   result.Biology,
-		// Civic:     result.Civic,
-		// Economics: result.Economics,
-		// History:   result.History,
-		// Geography: result.Geography,
 	}
 	c.JSON(200, Response{
 		Success: true,

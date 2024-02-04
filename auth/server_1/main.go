@@ -4,7 +4,6 @@ import (
 	database "authServer1/config"
 	"authServer1/controller"
 	models "authServer1/model"
-	"fmt"
 	"net"
 	"net/rpc"
 )
@@ -49,15 +48,12 @@ func main() {
 
 	listener, err := net.Listen("tcp", ":8001")
 	if err != nil {
-		fmt.Println("Error starting server:", err)
 		return
 	}
 
-	fmt.Println("Server is listening on port 8001...")
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("Error accepting connection:", err)
 			continue
 		}
 		go rpc.ServeConn(conn)

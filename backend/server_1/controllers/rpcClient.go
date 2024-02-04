@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/rpc"
 	"time"
 )
@@ -67,7 +66,6 @@ func ValidateToken(token string) (bool, error){
 	}
 	client, errr := rpc.Dial("tcp", address)
 	if errr != nil {
-		fmt.Print("Connection error")
 		return false,errr
 	}
 	defer client.Close()
@@ -75,7 +73,6 @@ func ValidateToken(token string) (bool, error){
 	var result bool
 	err := client.Call("AuthServer.ValidateToken", token, &result)
 	if err != nil {
-		fmt.Print("Invalid token", result,err)
 		return result,err
 	}
 

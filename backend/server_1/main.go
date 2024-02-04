@@ -4,10 +4,9 @@ import (
 	database "backendServer1/config"
 	"backendServer1/controllers"
 	"backendServer1/models"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
-	cors "github.com/rs/cors/wrapper/gin"
+	// cors "github.com/rs/cors/wrapper/gin"
 )
 
 type EmptyResponse struct {}
@@ -17,30 +16,9 @@ func init() {
 }
 
 func GetResult(c *gin.Context){
-	fmt.Println("the request has arrived______________")
 	controllers.GetResult(c)
 }
 func UploadResult(c *gin.Context){
-	fmt.Println("the request has arrived______________")
-	token := c.Request.Header.Get("Authorization")
-	result, errr := controllers.ValidateToken(token[14:])
-	if errr != nil {
-		c.JSON(400,controllers.Response{
-			Success: false,
-			Message: "Invalid token",
-			Data: EmptyResponse{},
-		})
-		return
-	}
-	
-	if !result {
-		c.JSON(400,controllers.Response{
-			Success: false,
-			Message: "Invalid token",
-			Data: EmptyResponse{},
-		})
-		return
-	}
 	controllers.UploadResult(c)
 }
 func RegisterUser(c *gin.Context){
@@ -112,27 +90,10 @@ func AuthenticateUser(c *gin.Context){
 	
 }
 
-func CORSMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-        c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-        c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-        c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
-
-        if c.Request.Method == "OPTIONS" {
-            c.AbortWithStatus(204)
-            return
-        }
-
-        c.Next()
-    }
-}
 
 func main(){
 	database.DB.AutoMigrate(&models.Result{})
 	router := gin.Default()
-	router.Use(cors.Default())
-
 	
 	router.GET("/result",GetResult)
 	router.POST("/upload",UploadResult)
