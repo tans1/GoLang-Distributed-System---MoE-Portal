@@ -26,7 +26,6 @@ func init() {
 		PetitionId INT AUTO_INCREMENT,
 		Name varchar(256) Not Null,
 		text TEXT,
-		CreationDate date,
 		OwnerId int,
 		PRIMARY KEY (PetitionId, Name),
 		INDEX PetitionName (Name)
