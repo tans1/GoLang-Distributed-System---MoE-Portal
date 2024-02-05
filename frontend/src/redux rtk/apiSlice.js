@@ -3,21 +3,27 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const distributedSystemApi = createApi({
   reducerPath: "distributedSystemApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://10.5.196.160:8080"
+    baseUrl: "http://localhost:8080"
   }),
   endpoints: (builder) => ({
     getResult: builder.query({
       query: (id) => {
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/result?admissionNumber=${id}`,
+          url: `/result?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}&admissionNumber=${id}`,
           method: "GET"
         };
       }
     }),
     createPetition: builder.mutation({
       query(body) {
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/createPetition?tag=petition`,
+          url: `/createPetition?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}&tag=petition`,
           method: "POST",
           body: body
         };
@@ -25,8 +31,11 @@ export const distributedSystemApi = createApi({
     }),
     signPetition: builder.mutation({
       query(body) {
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/signPetition?tag=petition`,
+          url: `/signPetition?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}&tag=petition`,
           method: "POST",
           body: body
         };
@@ -34,8 +43,11 @@ export const distributedSystemApi = createApi({
     }),
     registerUser: builder.mutation({
       query(body) {
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/register`,
+          url: `/register?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}`,
           method: "POST",
           body: body
         };
@@ -43,8 +55,11 @@ export const distributedSystemApi = createApi({
     }),
     loginUser: builder.mutation({
       query(body) {
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/login`,
+          url: `/login?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}`,
           method: "POST",
           body: body
         };
@@ -53,8 +68,11 @@ export const distributedSystemApi = createApi({
     uploadResult: builder.mutation({
       query(body) {
         const token = localStorage.getItem("token");
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/upload`,
+          url: `/upload?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}`,
           method: "POST",
           body: { ...body, token: token }
         };
@@ -63,16 +81,22 @@ export const distributedSystemApi = createApi({
 
     getAllPetitions: builder.query({
       query: () => {
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/petitions?tag=petition`,
+          url: `/petitions?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}&tag=petition`,
           method: "GET"
         };
       }
     }),
     getAllSignatories: builder.query({
       query: (title) => {
+        const getRandomFloat = () => {
+          return Math.random() * 180;
+        };
         return {
-          url: `/signatories?tag=petition&PetitionName="${title}"`,
+          url: `/signatories?Latitude=${getRandomFloat()}&Longitude=${getRandomFloat()}&tag=petition&PetitionName="${title}"`,
           method: "GET"
         };
       }

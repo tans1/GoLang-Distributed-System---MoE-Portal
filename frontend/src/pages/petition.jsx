@@ -8,6 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CollaborativeTextEditor from "./CollaborativeTextEditor";
+import "../styles/petition.css"
 
 export default function Petition() {
   let title = localStorage.getItem("title");
@@ -38,7 +39,7 @@ export default function Petition() {
         }, 3000);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
         toast.error("Unable to sign", {
           position: "top-center",
           autoClose: 4000,
@@ -51,24 +52,26 @@ export default function Petition() {
         });
       });
   };
+  console.log(signatories)
 
   return (
-    <div>
+    <div >
       <ToastContainer />
 
       <Navbar />
       <div className="petition-container">
+        <h1>{title} Petition</h1>
       <CollaborativeTextEditor title={title} />
         <div className="sign-petition">
           <span>Do you want to sign the petition?</span>
-          <button onClick={handleSign}>Yes</button>
+          <button onClick={handleSign} className="sign-petition-button">Yes</button>
         </div>
         <div className="signed-petition-list">
-          <p>The Following Students Have Signed :- </p>
+          <p>The following students have signed this petition:- </p>
           <ul>
             {signatories?.map((item, index) => (
               <li key={index}>
-                {item.FirstName} {item.LastName}, {item.Email}
+                {item.Email}
               </li>
             ))}
           </ul>

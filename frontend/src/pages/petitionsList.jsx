@@ -4,7 +4,11 @@ import Navbar from "../components/navbar";
 import { useGetAllPetitionsQuery } from "../redux rtk/apiSlice";
 
 export default function PetitionsList() {
-  const { data: petitions, error: petitionsError } = useGetAllPetitionsQuery();
+  const {
+    data: petitions,
+    error: petitionsError,
+    isSuccess
+  } = useGetAllPetitionsQuery();
 
   const handleCardClick = (title) => {
     localStorage.setItem("title", title);
@@ -15,6 +19,11 @@ export default function PetitionsList() {
       <Navbar />
       <div className="petionsList-container">
         <div className="petionsList">
+          {isSuccess && petitions.length === 0 && (
+            <div className="noPetitonContainer">
+              There is no Petition Create at least one
+            </div>
+          )}
           {petitions?.map((petition, index) => {
             return (
               <div

@@ -1,8 +1,8 @@
 package controller
 
 import (
-	database "authServer2/config"
-	models "authServer2/model"
+	database "authServer1/config"
+	models "authServer1/model"
 	"errors"
 	"time"
 
@@ -17,11 +17,13 @@ type User struct {
 type NewUser struct {
 	User
 	Email string
+	Role string `json:"role"`
 
 }
 type Claims struct {
 	Username string `json:"username"`
 	UserID   uint   `json:"user_id"`
+	Role string `json:"role"`
 	jwt.StandardClaims
 }
 
@@ -35,8 +37,10 @@ func RegisterUser(credentials NewUser) bool {
 			Username: credentials.Username,
 			Password: string(hashedPassword),
 			Email: credentials.Email,
+			Role: credentials.Role,
 		},
 	)
+
 
 	return result.Error == nil
 }
@@ -58,12 +62,17 @@ func Login(credentials User) (LoginResult, error) {
 
 	expirationTime := time.Now().Add(time.Hour * 500)
 	userID, err := getUserID(credentials.Username)
-    if err != nil {
-        return LoginResult{}, err
+    if err != nil  {
+		return LoginResult{}, err
     }
 
+	userRole, err := getUserRole(credentials.Username)
+    if err != nil  {
+        return LoginResult{}, err
+    }
 	claims := &Claims{
 		Username: credentials.Username,
+		Role:  userRole,
 		UserID:   userID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
@@ -121,10 +130,6 @@ func Refresh(tokenStr string)  (LoginResult, error) {
 		return LoginResult{}, err
 	}
 
-	// if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > 30*time.Second {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// 	return
-	// }
 	expirationTime := time.Now().Add(time.Hour * 500)
 
 	claims.ExpiresAt = expirationTime.Unix()
@@ -157,4 +162,12 @@ func getUserID(username string) (uint, error) {
         return 0, errors.New("User not found")
     }
     return user.ID, nil
+}
+func getUserRole(username string) (string, error) {
+    var user models.User
+    database.DB.Where("username = ?", username).First(&user)
+    if user.ID == 0 {
+        return "", errors.New("User not found")
+    }
+    return user.Role, nil
 }

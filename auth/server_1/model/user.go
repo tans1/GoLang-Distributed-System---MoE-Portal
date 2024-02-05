@@ -9,4 +9,5 @@ type User struct {
 	Email string
 	FirstName string
 	LastName  string
+	Role string `gorm:"default:student" `
 } 
