@@ -2,12 +2,11 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
-	config "petition1/config"
+	config "petition2/config"
 	"sync"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -33,7 +32,6 @@ type User struct {
 type TextDocument struct {
 	Title        string
 	Text         string
-	CreationDate time.Time
 	OwnerId      int
 }
 
@@ -91,13 +89,13 @@ var upgrader = websocket.Upgrader{
 
 func saveDocument(document TextDocument) (TextDocument,error) {
 
-	if document.Title == "" || document.Text == "" {
+	if document.Title == "" {
 		return document,errors.New("title and text must not be empty")
 	}
 
-	query := `INSERT INTO Petition(Name, text, CreationDate, OwnerId)
-	 VALUES (?, ?, ?, ?)`
-	_, err := config.Db.Exec(query, document.Title, document.Text, document.CreationDate, document.OwnerId)
+	query := `INSERT INTO Petition(Name, text, OwnerId)
+	 VALUES (?, ?, ?)`
+	_, err := config.Db.Exec(query, document.Title, document.Text, document.OwnerId)
 
 	return document,err
 }
@@ -106,20 +104,16 @@ func getDocument(documentName string) (TextDocument,error) {
 	var (
 		Name         string
 		text         string
-		CreationDate []uint8
 		OwnerId      int
 	)
 
-	err := config.Db.QueryRow(`SELECT Name,text,CreationDate,OwnerId 
-	FROM Petition where Name = ? ORDER BY PetitionId DESC LIMIT 1`, documentName).Scan(&Name, &text, &CreationDate, &OwnerId)
-	
-	layout := "2006-01-02"
-	modifiedDate, _ := time.Parse(layout, string(CreationDate))
+	err := config.Db.QueryRow(`SELECT Name,text,OwnerId 
+	FROM Petition where Name = ? ORDER BY PetitionId DESC LIMIT 1`, documentName).Scan(&Name, &text, &OwnerId)
+	fmt.Println(err)
 	docMutex.Lock()
 	doc := TextDocument{
 		Title:        Name,
 		Text:         text,
-		CreationDate: modifiedDate,
 		OwnerId:      OwnerId,
 	}
 
@@ -188,7 +182,7 @@ func (c *Client) write() {
 }
 func getAll()( []TextDocument,error) {
 
-	query := `SELECT Name, Text, CreationDate, OwnerId
+	query := `SELECT Name, Text, OwnerId
 	FROM Petition
 	WHERE (PetitionId, Name) IN 
 		(SELECT MAX(PetitionId), Name
@@ -202,16 +196,13 @@ func getAll()( []TextDocument,error) {
 	var res []TextDocument = make([]TextDocument, 0)
 	for rows.Next() {
 		var name string
-		var CreationDate []uint8
 		var OwnerId int
 		var Text string
-		if err := rows.Scan(&name, &Text, &CreationDate, &OwnerId); err != nil {
+		if err := rows.Scan(&name, &Text, &OwnerId); err != nil {
 			continue
 		}
 
-		layout := "2006-01-02"
-		tm, _ := time.Parse(layout, string(CreationDate))
-		res = append(res, TextDocument{Title: name, CreationDate: tm, OwnerId: OwnerId, Text: Text})
+		res = append(res, TextDocument{Title: name, OwnerId: OwnerId, Text: Text})
 	}
 
 	return res,err
@@ -230,20 +221,24 @@ func getAllPetitions(c *gin.Context) {
 }
 
 func createPetition(c *gin.Context) {
+	fmt.Println("the request is here.....................")
 	var document TextDocument
 	if err := c.BindJSON(&document); err != nil {
 		return
 	}
 	_,err := getDocument(document.Title)
+	fmt.Println(1111111111111111111, err)
 	if (err == nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
 		return
 	}
 
-	document.CreationDate = time.Now()
-
 	doc,err := saveDocument(document)
+	fmt.Println(222222222222222222, err)
+
 	if err != nil {
+		fmt.Println(333333333333333, err)
+
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
         return
     }
@@ -269,10 +264,11 @@ func signPetition(c *gin.Context) {
 }
 
 func getSignatories(c *gin.Context) {
+	fmt.Println("11111111111111111111111111")
 	petitionName := c.Query("PetitionName")
-	query := `SELECT FirstName, LastName, Email FROM Users JOIN SignPetition 
-	ON Users.UserId = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
+	query := `SELECT first_name, last_name, email FROM Users JOIN SignPetition ON Users.id = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
 	rows, err := config.Db.Query(query)
+	fmt.Println("22222222222222",err)
 	if (err != nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve signatories"})
 		return 
@@ -305,7 +301,7 @@ func main() {
 	router.POST("/createPetition", createPetition)
 	router.POST("/signPetition", signPetition)
 	router.GET("/signatories", getSignatories)
-	router.Run("localhost:3033")
-	log.Println("Server is running on :3033")
+	router.Run("localhost:3032")
+	log.Println("Server is running on :3032")
 
 }

@@ -36,7 +36,7 @@ export default function Home() {
               <p>Schools</p>
 
               <div className="counter">
-                <CountUp end={52202} duration={5} />
+                <CountUp end={52202} duration={10} />
               </div>
             </div>
           </div>

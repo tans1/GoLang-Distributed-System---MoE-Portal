@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	database "backendServer1/config"
-	"backendServer1/models"
+	database "backendServer2/config"
+	"backendServer2/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,7 +39,7 @@ type ResponseData struct {
 	Aptitude int64 
 	Physics int64 
 	Chemistry int64 
-	Biology int64
+	Biology int64 
 }
 func UploadResult(c *gin.Context){
 	var body Body

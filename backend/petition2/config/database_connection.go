@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	mysqlDSN = "root:12345678@tcp(127.0.0.1:3306)/results?charset=utf8mb4&parseTime=True&loc=Local"
+	mysqlDSN = "root:root@tcp(127.0.0.1:3306)/results?charset=utf8mb4&parseTime=True&loc=Local"
 	serverAddress = "localhost:8080"
 )
 
@@ -26,7 +26,6 @@ func init() {
 		PetitionId INT AUTO_INCREMENT,
 		Name varchar(256) Not Null,
 		text TEXT,
-		CreationDate date,
 		OwnerId int,
 		PRIMARY KEY (PetitionId, Name),
 		INDEX PetitionName (Name)

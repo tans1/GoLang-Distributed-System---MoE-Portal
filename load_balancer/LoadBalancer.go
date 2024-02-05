@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"math"
 	"net"
@@ -12,6 +13,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -143,8 +145,10 @@ func (lb *LoadBalancer) nextServer(requestLocation Location,serverList []Server)
 
 	for _,val := range serverDistanceMap{
 		address := val.server.Address
+		fmt.Println(address.String())
 		running,_ := lb.checkHealth(address.String())
-		if !running{
+		fmt.Println(running)
+		if running{
 			return address
 		}
 	}
@@ -153,17 +157,25 @@ func (lb *LoadBalancer) nextServer(requestLocation Location,serverList []Server)
 }
 
 func (lb *LoadBalancer) reverseProxy(server *url.URL,w http.ResponseWriter,r *http.Request){
+	fmt.Println("Proxying to: ",server.String())
 	proxy := httputil.NewSingleHostReverseProxy(server)
 	proxy.ServeHTTP(w, r)
 }
 
 func (lb *LoadBalancer) handlePetitionRequest(documentName string,requestLocation Location,w http.ResponseWriter,r *http.Request) {
+	
+	for key, value := range lb.documentWebSockets {
+		fmt.Printf("Key: %s, Value: %+v\n", key, value)
+	}
+
 	if server, ok := lb.documentWebSockets[documentName]; ok {
 			lb.reverseProxy(server,w,r)
 			return 
 	}
 
 	server := lb.nextServer(requestLocation,lb.petitionServers)
+	fmt.Println(server)
+	fmt.Println("Server Address: ",server.String())
 	lb.documentWebSockets[documentName] = server
 	lb.reverseProxy(server,w,r)
 
@@ -218,7 +230,8 @@ func (lb *LoadBalancer) start(dl DistributedLock,ctx context.Context){
 	}
 }
 func (lb *LoadBalancer) checkHealth(address string)(bool,error){
-	conn, err := net.DialTimeout("tcp", address, 1*time.Second)
+	urlWithoutHTTP := strings.TrimPrefix(address, "http://")
+	conn, err := net.DialTimeout("tcp", urlWithoutHTTP, 1*time.Second)
 	if err != nil {
 		return false,err
 	}

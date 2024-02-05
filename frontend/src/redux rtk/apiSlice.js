@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const distributedSystemApi = createApi({
   reducerPath: "distributedSystemApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:8080"
+    baseUrl: "http://10.5.196.160:8080"
   }),
   endpoints: (builder) => ({
     getResult: builder.query({
