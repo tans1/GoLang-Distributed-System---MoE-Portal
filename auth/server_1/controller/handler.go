@@ -4,6 +4,7 @@ import (
 	database "authServer1/config"
 	models "authServer1/model"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -46,6 +47,7 @@ type LoginResult struct {
 	ExpireDate time.Time
 }
 func Login(credentials User) (LoginResult, error) {
+	fmt.Println("Gets to the auth microservice")
 	expectedPassword, err := getUserPassword(credentials.Username)
 	if err != nil {
 		return LoginResult{}, err

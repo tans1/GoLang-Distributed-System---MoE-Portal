@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	config "petition1/config"
@@ -91,14 +92,16 @@ var upgrader = websocket.Upgrader{
 
 func saveDocument(document TextDocument) (TextDocument,error) {
 
-	if document.Title == "" || document.Text == "" {
+	if document.Title == ""{
 		return document,errors.New("title and text must not be empty")
 	}
 
+	fmt.Println(document.Title,document.Text,document.CreationDate,document.OwnerId)
 	query := `INSERT INTO Petition(Name, text, CreationDate, OwnerId)
 	 VALUES (?, ?, ?, ?)`
 	_, err := config.Db.Exec(query, document.Title, document.Text, document.CreationDate, document.OwnerId)
 
+	fmt.Println(err)
 	return document,err
 }
 func getDocument(documentName string) (TextDocument,error) {
@@ -115,6 +118,7 @@ func getDocument(documentName string) (TextDocument,error) {
 	
 	layout := "2006-01-02"
 	modifiedDate, _ := time.Parse(layout, string(CreationDate))
+	fmt.Println(modifiedDate,"modifiedDate",string(CreationDate))
 	docMutex.Lock()
 	doc := TextDocument{
 		Title:        Name,
@@ -138,10 +142,16 @@ func handleConnections(hub *Hub, c *gin.Context) {
 	
 	var doc TextDocument
 	documentName := c.Request.URL.Query().Get("document")
+
+	for k, v := range cache {
+        fmt.Println(k, "value is", v)
+    }
+
 	if document, ok := cache[documentName]; ok {
 		doc = document
 	} else {
 		doc,_ = getDocument(documentName)
+		fmt.Println(doc,"Got it from database")
 		cache[documentName] = doc
 	}
 	
@@ -150,11 +160,13 @@ func handleConnections(hub *Hub, c *gin.Context) {
 
 	go client.write()
 	go client.read()
+	fmt.Println(doc.Text,"document recieved")
 	client.Send <- &doc
 }
 
 func (c *Client) read() {
 	defer func() {
+		fmt.Println(len(c.hub.clients))
 		if len(c.hub.clients) == 1 {
 			saveDocument(cache[c.Document.Title])
 		}
@@ -181,6 +193,7 @@ func (c *Client) write() {
 			if !ok {
 				return
 			}
+			fmt.Println(doc.Text,"document to be sent to the client")
 			c.Document.Text = doc.Text
 			c.conn.WriteMessage(websocket.TextMessage, []byte(doc.Text))
 		}

@@ -4,6 +4,7 @@ import (
 	database "backendServer1/config"
 	"backendServer1/controllers"
 	"backendServer1/models"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	// cors "github.com/rs/cors/wrapper/gin"
@@ -56,6 +57,7 @@ func RegisterUser(c *gin.Context){
 	
 }
 func AuthenticateUser(c *gin.Context){
+	fmt.Println("Authenticating user")
 	var user controllers.User
 	if c.BindJSON(&user) != nil {
 		c.JSON(400,controllers.Response{
@@ -65,6 +67,7 @@ func AuthenticateUser(c *gin.Context){
 		})
 		return
 	}
+	fmt.Println(user.Username,user.Password)
 	result, err := controllers.AuthenticateUser(user)
 	if err != nil {
 		c.JSON(400,controllers.Response{
