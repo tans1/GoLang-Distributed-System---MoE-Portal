@@ -6,7 +6,7 @@ function CollaborativeTextEditor({ title }) {
 
         function connectWebSocket() {
             
-            socket = new WebSocket(`ws://10.5.196.160:8080/ws?document=${title}&Latitude=10&Longitude=20`);
+            socket = new WebSocket(`ws://localhost:8080/ws?document=${title}&Latitude=10&Longitude=20`);
 
             socket.onopen = function () {
                 console.log("WebSocket connection established.");
