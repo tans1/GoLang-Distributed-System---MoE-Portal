@@ -7,6 +7,8 @@ import (
 	"net/http"
 	config "petition2/config"
 	"sync"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -89,8 +91,9 @@ var upgrader = websocket.Upgrader{
 
 func saveDocument(document TextDocument) (TextDocument,error) {
 
+
 	if document.Title == "" {
-		return document,errors.New("title and text must not be empty")
+		return document,errors.New("title must not be empty")
 	}
 
 	query := `INSERT INTO Petition(Name, text, OwnerId)
@@ -109,7 +112,6 @@ func getDocument(documentName string) (TextDocument,error) {
 
 	err := config.Db.QueryRow(`SELECT Name,text,OwnerId 
 	FROM Petition where Name = ? ORDER BY PetitionId DESC LIMIT 1`, documentName).Scan(&Name, &text, &OwnerId)
-	fmt.Println(err)
 	docMutex.Lock()
 	doc := TextDocument{
 		Title:        Name,
@@ -149,6 +151,7 @@ func handleConnections(hub *Hub, c *gin.Context) {
 
 func (c *Client) read() {
 	defer func() {
+
 		if len(c.hub.clients) == 1 {
 			saveDocument(cache[c.Document.Title])
 		}
@@ -221,24 +224,19 @@ func getAllPetitions(c *gin.Context) {
 }
 
 func createPetition(c *gin.Context) {
-	fmt.Println("the request is here.....................")
 	var document TextDocument
 	if err := c.BindJSON(&document); err != nil {
 		return
 	}
 	_,err := getDocument(document.Title)
-	fmt.Println(1111111111111111111, err)
 	if (err == nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
 		return
 	}
 
 	doc,err := saveDocument(document)
-	fmt.Println(222222222222222222, err)
 
 	if err != nil {
-		fmt.Println(333333333333333, err)
-
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
         return
     }
@@ -264,15 +262,14 @@ func signPetition(c *gin.Context) {
 }
 
 func getSignatories(c *gin.Context) {
-	fmt.Println("11111111111111111111111111")
 	petitionName := c.Query("PetitionName")
 	query := `SELECT first_name, last_name, email FROM Users JOIN SignPetition ON Users.id = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
 	rows, err := config.Db.Query(query)
-	fmt.Println("22222222222222",err)
 	if (err != nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve signatories"})
 		return 
 	}
+
 	defer rows.Close()
 	var users = make([]User, 0)
 	for rows.Next() {
@@ -284,14 +281,36 @@ func getSignatories(c *gin.Context) {
 		users = append(users, user)
 
 	}
-
 	c.IndentedJSON(http.StatusOK, users)
 }
+
+func save(cache map[string]TextDocument) {
+    ticker := time.NewTicker(10 * time.Second)
+    defer ticker.Stop()
+
+    for {
+        select {
+        case <-ticker.C:
+            saveCache(cache)
+        }
+    }
+}
+
+func saveCache(cache map[string]TextDocument) {
+    for title, value := range cache {
+        
+        _,err := saveDocument(value)
+        if err != nil {
+            fmt.Printf("Error saving document %s: %v\n", title, err)
+        }
+    }
+}
+
 
 func main() {
 	hub := newHub()
 	go hub.run()
-
+	go save(cache)
 	router := gin.Default()
 
 	router.GET("/ws", func(c *gin.Context) {
