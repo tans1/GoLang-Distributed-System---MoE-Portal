@@ -23,6 +23,7 @@ export default function Navbar() {
   const handleLogout = () => {
     setIsLoggedIn(false);
     localStorage.removeItem("token");
+    window.location.href = "/";
   };
   return (
     <nav>
