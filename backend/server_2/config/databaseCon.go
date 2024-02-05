@@ -10,6 +10,7 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
+	// cluster
 	// dsn := "root:12345678@tcp(127.0.0.1:6446)/resultsDb?charset=utf8mb4&parseTime=True&loc=Local"
 	dsn := "root:root@tcp(127.0.0.1:3306)/results?charset=utf8mb4&parseTime=True&loc=Local"
 

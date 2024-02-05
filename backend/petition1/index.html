@@ -11,40 +11,20 @@
     </div>
 
     <script>
-        let socket;
-    
-        function connectWebSocket() {
-            socket = new WebSocket("ws://localhost:3033/ws?document=firstPetition&Latitude=50&Longitude=80");
-    
-            socket.onopen = function () {
-                console.log("WebSocket connection established.");
-            };
-    
-            socket.onmessage = function (event) {
-                console.log("Received message:", event.data);
-                textArea.value = event.data;
-            };
-    
-            socket.onerror = function (error) {
-                console.error("WebSocket error:", error);
-            };
-    
-            socket.onclose = function () {
-                console.log("WebSocket connection closed. Reconnecting...");
-                setTimeout(connectWebSocket, 200); // Attempt to reconnect after 2 seconds
-            };
-        }
-    
-        connectWebSocket();
-    
-        const textArea = document.getElementById("editor");
-    
+        const socket = new WebSocket("ws://localhost:8080/ws?document=secondPetition&Latitude=20&Longitude=10");
+        const textArea = document.getElementById("editor")
+        socket.onmessage = function (event) {
+            console.log(event.data,"on message body")
+            textArea.value = event.data;
+       
+        };
+
         textArea.addEventListener("input", function (event) {
             const text = event.target.value;
-            console.log("About to send:", text);
-            socket.send(text);
+            const insertedText = textArea.value
+            console.log(insertedText,"About to send")
+            socket.send(insertedText);            
         });
     </script>
-
 </body>
 </html>

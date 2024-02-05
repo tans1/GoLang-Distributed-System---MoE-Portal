@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	config "petition1/config"
+	config "petition2/config"
 	"sync"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -93,12 +93,10 @@ func saveDocument(document TextDocument) (TextDocument,error) {
 		return document,errors.New("title and text must not be empty")
 	}
 
-	
 	query := `INSERT INTO Petition(Name, text, OwnerId)
 	 VALUES (?, ?, ?)`
 	_, err := config.Db.Exec(query, document.Title, document.Text, document.OwnerId)
 
-	fmt.Println(err)
 	return document,err
 }
 func getDocument(documentName string) (TextDocument,error) {
@@ -111,7 +109,7 @@ func getDocument(documentName string) (TextDocument,error) {
 
 	err := config.Db.QueryRow(`SELECT Name,text,OwnerId 
 	FROM Petition where Name = ? ORDER BY PetitionId DESC LIMIT 1`, documentName).Scan(&Name, &text, &OwnerId)
-	
+	fmt.Println(err)
 	docMutex.Lock()
 	doc := TextDocument{
 		Title:        Name,
@@ -134,16 +132,10 @@ func handleConnections(hub *Hub, c *gin.Context) {
 	
 	var doc TextDocument
 	documentName := c.Request.URL.Query().Get("document")
-
-	for k, v := range cache {
-        fmt.Println(k, "value is", v)
-    }
-
 	if document, ok := cache[documentName]; ok {
 		doc = document
 	} else {
 		doc,_ = getDocument(documentName)
-		fmt.Println(doc,"Got it from database")
 		cache[documentName] = doc
 	}
 	
@@ -152,13 +144,11 @@ func handleConnections(hub *Hub, c *gin.Context) {
 
 	go client.write()
 	go client.read()
-	fmt.Println(doc.Text,"document recieved")
 	client.Send <- &doc
 }
 
 func (c *Client) read() {
 	defer func() {
-		fmt.Println(len(c.hub.clients))
 		if len(c.hub.clients) == 1 {
 			saveDocument(cache[c.Document.Title])
 		}
@@ -185,7 +175,6 @@ func (c *Client) write() {
 			if !ok {
 				return
 			}
-			fmt.Println(doc.Text,"document to be sent to the client")
 			c.Document.Text = doc.Text
 			c.conn.WriteMessage(websocket.TextMessage, []byte(doc.Text))
 		}
@@ -213,7 +202,6 @@ func getAll()( []TextDocument,error) {
 			continue
 		}
 
-		
 		res = append(res, TextDocument{Title: name, OwnerId: OwnerId, Text: Text})
 	}
 
@@ -233,19 +221,24 @@ func getAllPetitions(c *gin.Context) {
 }
 
 func createPetition(c *gin.Context) {
+	fmt.Println("the request is here.....................")
 	var document TextDocument
 	if err := c.BindJSON(&document); err != nil {
 		return
 	}
 	_,err := getDocument(document.Title)
+	fmt.Println(1111111111111111111, err)
 	if (err == nil){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
 		return
 	}
 
-
 	doc,err := saveDocument(document)
+	fmt.Println(222222222222222222, err)
+
 	if err != nil {
+		fmt.Println(333333333333333, err)
+
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create petition"})
         return
     }
@@ -271,12 +264,12 @@ func signPetition(c *gin.Context) {
 }
 
 func getSignatories(c *gin.Context) {
+	fmt.Println("11111111111111111111111111")
 	petitionName := c.Query("PetitionName")
-	query := `SELECT FirstName, LastName, Email FROM Users JOIN SignPetition 
-	ON Users.UserId = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
+	query := `SELECT first_name, last_name, email FROM Users JOIN SignPetition ON Users.id = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
 	rows, err := config.Db.Query(query)
+	fmt.Println("22222222222222",err)
 	if (err != nil){
-		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve signatories"})
 		return 
 	}
@@ -308,7 +301,7 @@ func main() {
 	router.POST("/createPetition", createPetition)
 	router.POST("/signPetition", signPetition)
 	router.GET("/signatories", getSignatories)
-	router.Run("localhost:3033")
-	log.Println("Server is running on :3033")
+	router.Run("localhost:3032")
+	log.Println("Server is running on :3032")
 
 }

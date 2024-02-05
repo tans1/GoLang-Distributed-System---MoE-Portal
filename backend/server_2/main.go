@@ -1,11 +1,13 @@
 package main
 
 import (
-	database "backendServer2/config"
-	"backendServer2/controllers"
-	"backendServer2/models"
+	database "backendServer1/config"
+	"backendServer1/controllers"
+	"backendServer1/models"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
+	// cors "github.com/rs/cors/wrapper/gin"
 )
 
 type EmptyResponse struct {}
@@ -55,6 +57,7 @@ func RegisterUser(c *gin.Context){
 	
 }
 func AuthenticateUser(c *gin.Context){
+	fmt.Println("Authenticating user")
 	var user controllers.User
 	if c.BindJSON(&user) != nil {
 		c.JSON(400,controllers.Response{
@@ -64,6 +67,7 @@ func AuthenticateUser(c *gin.Context){
 		})
 		return
 	}
+	fmt.Println(user.Username,user.Password)
 	result, err := controllers.AuthenticateUser(user)
 	if err != nil {
 		c.JSON(400,controllers.Response{
@@ -89,12 +93,13 @@ func AuthenticateUser(c *gin.Context){
 	
 }
 
+
 func main(){
 	database.DB.AutoMigrate(&models.Result{})
 	router := gin.Default()
-
+	
 	router.GET("/result",GetResult)
-	router.POST("/result",UploadResult)
+	router.POST("/upload",UploadResult)
 	router.POST("/register",RegisterUser)
 	router.POST("/login",AuthenticateUser)
 	router.Run(":3031")

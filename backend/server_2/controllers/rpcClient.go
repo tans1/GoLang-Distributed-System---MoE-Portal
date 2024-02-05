@@ -72,9 +72,10 @@ func ValidateToken(token string) (bool, error){
 
 	var result bool
 	err := client.Call("AuthServer.ValidateToken", token, &result)
-		if err != nil {
-			return result,err
-		}
+	if err != nil {
+		return result,err
+	}
+
 	return result,nil
 }
 

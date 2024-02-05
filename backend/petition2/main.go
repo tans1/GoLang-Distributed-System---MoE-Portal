@@ -301,7 +301,7 @@ func main() {
 	router.POST("/createPetition", createPetition)
 	router.POST("/signPetition", signPetition)
 	router.GET("/signatories", getSignatories)
-	router.Run("localhost:3032")
-	log.Println("Server is running on :3032")
+	router.Run("localhost:3033")
+	log.Println("Server is running on :3033")
 
 }
