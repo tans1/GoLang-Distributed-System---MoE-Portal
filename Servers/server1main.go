@@ -79,6 +79,7 @@ func AuthenticateUser(c *gin.Context) {
 			Message: "User logged in successfully",
 			Data:    result,
 		})
+
 	} else {
 		c.JSON(500, controllers.Response{
 			Success: false,
