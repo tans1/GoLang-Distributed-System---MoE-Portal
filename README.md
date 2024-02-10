@@ -28,7 +28,7 @@ Our project includes a thoughtfully designed distributed system, where server co
 
 ### Contributors
 1. Tofik Abdu ........... UGR/1721/13
-2. Nahom Amare ..... UGR/7099/13
-3. Tadael Shewarega ........UGR/1044/13
+2. Nahom Amare ...........UGR/7099/13
+3. Tadael Shewarega ......UGR/1044/13
 4. Thomas Wondwosen ..... UGR/1972/13
-5. Habiba Nesro ...................  UGR/0088/13  
+5. Habiba Nesro ..........UGR/0088/13  
