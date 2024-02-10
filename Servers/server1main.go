@@ -71,6 +71,7 @@ func AuthenticateUser(c *gin.Context) {
 			Data:    EmptyResponse{},
 		})
 	}
+	// This is pushed by me
 	c.SetCookie("Authorization", result.Token, 3600, "/", "localhost", false, true)
 	if result.Token != "" {
 		c.JSON(200, controllers.Response{
