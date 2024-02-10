@@ -266,6 +266,7 @@ func getSignatories(c *gin.Context) {
 	query := `SELECT first_name, last_name, email FROM Users JOIN SignPetition ON Users.id = SignPetition.UserId WHERE SignPetition.PetitionName = ` + petitionName + " "
 	rows, err := config.Db.Query(query)
 	if (err != nil){
+		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve signatories"})
 		return 
 	}
